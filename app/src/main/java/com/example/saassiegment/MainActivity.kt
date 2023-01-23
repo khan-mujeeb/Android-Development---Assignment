@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -36,6 +37,10 @@ class MainActivity : AppCompatActivity() {
         isConnected(cld)
         batteryStatus()
         getLocation()
+
+        var sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
+        val currentDate = sdf.format(Date())
+        println("date is $currentDate")
 
     }
 
