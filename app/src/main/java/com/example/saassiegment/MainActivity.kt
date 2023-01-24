@@ -19,6 +19,7 @@ import android.os.BatteryManager
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.saassiegment.databinding.ActivityMainBinding
@@ -36,6 +37,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     // creating variables.
+    private var pro: Int = 5
     private val CAMERA_REQUEST_CODE = 102
     private lateinit var imei: String
     lateinit var permissionUtils: PermissionUtils
@@ -54,21 +56,8 @@ class MainActivity : AppCompatActivity() {
         // display system information
         displayData()
 
-//        update information every x sec
-        val timer = Timer()
-        val task = object : TimerTask() {
-            override fun run() {
-                (this@MainActivity as Activity).runOnUiThread {
-                    getDateTime()
-                }
-            }
-        }
-        timer.schedule(task, 0, 5000) // Repeat the task every 5 seconds
-
-
-//        scheduleAlarm()
-
-
+        var timer = Timer()
+        var task: TimerTask? = null
         binding.openCamera.setOnClickListener {
             choosePhotoFromCamera()
         }
@@ -76,6 +65,31 @@ class MainActivity : AppCompatActivity() {
         binding.refreshBtn.setOnClickListener {
             displayData()
         }
+
+        binding.seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                task?.cancel() //cancel the previous task
+                timer.purge() //remove any scheduled tasks
+                timer = Timer() //create new timer object
+                task = object : TimerTask() { //create new task
+                    override fun run() {
+                        (this@MainActivity as Activity).runOnUiThread {
+                            displayData()
+                        }
+                    }
+                }
+                timer.schedule(task, 0, progress * 1000.toLong()) //schedule new task
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+            // rest of the methods
+        })
 
     }
 

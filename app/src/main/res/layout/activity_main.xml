@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="8dp"
+    android:screenOrientation="portrait"
     tools:context=".MainActivity">
 
     <TextView
@@ -21,6 +22,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:layout_marginTop="8dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -33,6 +35,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:textSize="16sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="IMEI"
@@ -43,6 +46,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:textSize="16sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -54,6 +58,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:textSize="16sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -65,7 +70,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-
+                android:textSize="16sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -77,17 +82,30 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:layout_marginTop="8dp"
+                android:textSize="16sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:text="Location"
                 android:textAlignment="center"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <TextView
+                android:textSize="16sp"
+                android:layout_gravity="center"
+                android:gravity="center_vertical"
+                android:text="date and time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+                />
+
 
             <ImageView
+                android:scaleType="center"
+                android:id="@+id/photo"
                 android:layout_marginTop="8dp"
                 android:layout_width="wrap_content"
                 android:src="@drawable/ic_baseline_photo_camera_24"
@@ -101,6 +119,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:textSize="16sp"
                 android:id="@+id/imei"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -112,6 +131,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:textSize="16sp"
                 android:id="@+id/internetConnectivity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -124,6 +144,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:textSize="16sp"
                 android:id="@+id/batterycharing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -136,6 +157,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:textSize="16sp"
                 android:id="@+id/battery"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -148,6 +170,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
+                android:textSize="16sp"
                 android:id="@+id/location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -159,7 +182,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+
+
             <TextView
+                android:textSize="16sp"
+                android:id="@+id/date_time"
+                android:layout_gravity="center"
+                android:gravity="center_vertical"
+                android:text="date time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:textSize="16sp"
+                android:id="@+id/open_camera"
                 android:layout_gravity="center"
                 android:gravity="center_vertical"
                 android:text="Open Camera"
@@ -169,5 +205,22 @@
 
 
     </LinearLayout>
+
+    <SeekBar
+        android:layout_margin="10dp"
+        android:id="@+id/seekbar"
+        android:progress="5"
+        android:progressTint="#FF0000"
+        android:thumbTint="#FF0000"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:max="15"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/refreshBtn"
+        android:text="refresh"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>
