@@ -2,9 +2,7 @@ package com.example.saassiegment
 
 import android.Manifest.permission.*
 import android.app.Activity
-import android.app.AlarmManager
 import android.app.AlertDialog
-import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -16,7 +14,6 @@ import android.location.Geocoder
 import android.location.LocationManager
 import android.net.Uri
 import android.os.BatteryManager
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
@@ -28,13 +25,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.saassiegment.databinding.ActivityMainBinding
 import com.example.saassiegment.model.SystemInfo
+import com.example.saassiegment.utlis.ConnectionLiveData
+import com.example.saassiegment.utlis.PermissionUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -72,7 +68,7 @@ class MainActivity : AppCompatActivity() {
 
         // display system information
         displayData()
-
+        getIMEI()
 
         var timer = Timer()
         var task: TimerTask? = null
@@ -83,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         binding.refreshBtn.setOnClickListener {
             displayData()
         }
-        binding.upload.setOnClickListener{
+        binding.upload.setOnClickListener {
             sendToDb()
         }
 
@@ -115,10 +111,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun displayData() {
+
         isConnected()
         batteryStatus()
         getLocation()
         getDateTime()
+    }
+
+    private fun getIMEI() {
+        try {
+
+            val telephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    READ_PHONE_STATE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(this, arrayOf(READ_PHONE_STATE), 18)
+            }
+
+            // in the below line, we are setting our imei to our text view.
+            imei = telephonyManager.imei
+            binding.imei.text = imei
+        } catch (e: java.lang.Exception) {
+            Toast.makeText(this@MainActivity, "IMEI access denied 10+", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     // date and time
@@ -165,7 +183,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendToDb(){
+    private fun sendToDb() {
         val randomkey = database.reference.push().key.toString()
         var data = SystemInfo(
             imei,
@@ -178,7 +196,7 @@ class MainActivity : AppCompatActivity() {
             .child(randomkey)
             .setValue(data)
             .addOnSuccessListener {
-                Toast.makeText(this,"data uploaded to firebase",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "data uploaded to firebase", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -233,11 +251,24 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+//        for location
         if (requestCode == PERMISSION_REQUEST_ACCESS_LOCATION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getLocation()
             }
         }
+
+        // for imei
+        if (requestCode == 18) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission granted.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Permission denied.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
     }
 
     private fun isLocationEnabled(): Boolean {
@@ -312,7 +343,7 @@ class MainActivity : AppCompatActivity() {
                     .child(Date().time.toString())
                     .putFile(uri)
                     .addOnSuccessListener {
-                        Toast.makeText(this,"image uploaded",Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "image uploaded", Toast.LENGTH_SHORT).show()
                     }
             }
 
@@ -329,10 +360,12 @@ class MainActivity : AppCompatActivity() {
         var charging = ""
         var imei = ""
     }
+
     fun getImageUri(inContext: Context, inImage: Bitmap): Uri {
         val bytes = ByteArrayOutputStream()
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-        val path = MediaStore.Images.Media.insertImage(inContext.contentResolver, inImage, "Title", null)
+        val path =
+            MediaStore.Images.Media.insertImage(inContext.contentResolver, inImage, "Title", null)
         return Uri.parse(path)
     }
 }
