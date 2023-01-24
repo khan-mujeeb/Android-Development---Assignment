@@ -16,15 +16,24 @@ import android.location.Geocoder
 import android.location.LocationManager
 import android.net.Uri
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.example.saassiegment.databinding.ActivityMainBinding
+import com.example.saassiegment.model.SystemInfo
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -39,7 +48,8 @@ class MainActivity : AppCompatActivity() {
     // creating variables.
     private var pro: Int = 5
     private val CAMERA_REQUEST_CODE = 102
-    private lateinit var imei: String
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: FirebaseDatabase
     lateinit var permissionUtils: PermissionUtils
     private lateinit var binding: ActivityMainBinding
     private val PERMISSION_REQUEST_ACCESS_LOCATION = 101
@@ -50,11 +60,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        database = FirebaseDatabase.getInstance()
+        auth = FirebaseAuth.getInstance()
         permissionUtils = PermissionUtils(this)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         // display system information
         displayData()
+
 
         var timer = Timer()
         var task: TimerTask? = null
@@ -64,6 +77,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.refreshBtn.setOnClickListener {
             displayData()
+        }
+        binding.upload.setOnClickListener{
+            sendToDb()
         }
 
         binding.seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -93,27 +109,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
-    private fun scheduleAlarm() {
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, MyBroadCastReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-        )
-        alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP,
-            System.currentTimeMillis(),
-            10 * 1000,
-            pendingIntent
-        )
-        intent.putExtra("mujeeb", "khan")
-        sendBroadcast(intent)
-
-    }
-
     fun displayData() {
         isConnected()
         batteryStatus()
@@ -126,12 +121,13 @@ class MainActivity : AppCompatActivity() {
         var sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
         val currentDate = sdf.format(Date())
         binding.dateTime.text = currentDate
+        timeStamp = currentDate.toString()
 
 
     }
 
     // battery status
-    private fun batteryStatus(): Float {
+    private fun batteryStatus() {
         val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { ifilter ->
             applicationContext.registerReceiver(null, ifilter)
         }
@@ -144,7 +140,10 @@ class MainActivity : AppCompatActivity() {
         val batteryPct: Float = (level / scale.toFloat()) * 100
         binding.batterycharing.text = isCharging.toString()
         binding.battery.text = "$batteryPct%"
-        return batteryPct
+
+        charging = isCharging.toString()
+        battery = "$batteryPct%"
+
     }
 
     // Internet Connectivity
@@ -153,13 +152,29 @@ class MainActivity : AppCompatActivity() {
         cld.observe(this) { isConnected ->
 
             if (isConnected) {
-                println("connected")
                 binding.internetConnectivity.text = "connected"
+
             } else {
-                println("disconnected")
                 binding.internetConnectivity.text = "disconnected"
             }
         }
+    }
+
+    private fun sendToDb(){
+        val randomkey = database.reference.push().key.toString()
+        var data = SystemInfo(
+            imei,
+            charging,
+            battery,
+            lastLocaton,
+            timeStamp
+        )
+        database.reference.child("system info")
+            .child(randomkey)
+            .setValue(data)
+            .addOnSuccessListener {
+                Toast.makeText(this,"data uploaded to firebase",Toast.LENGTH_SHORT).show()
+            }
     }
 
     // locations
@@ -185,6 +200,7 @@ class MainActivity : AppCompatActivity() {
                                 if (it.isNotEmpty()) {
                                     val city: String = addresses[0].locality
                                     binding.location.text = city
+                                    lastLocaton = city
                                 }
                             }
                         }
@@ -290,5 +306,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    companion object {
+        var lastLocaton = ""
+        var timeStamp = ""
+        var battery = ""
+        var charging = ""
+        var imei = ""
+    }
 }
