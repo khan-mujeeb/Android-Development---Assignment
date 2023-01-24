@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -34,11 +35,13 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -50,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private val CAMERA_REQUEST_CODE = 102
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
+    private lateinit var storage: FirebaseStorage
     lateinit var permissionUtils: PermissionUtils
     private lateinit var binding: ActivityMainBinding
     private val PERMISSION_REQUEST_ACCESS_LOCATION = 101
@@ -61,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         database = FirebaseDatabase.getInstance()
+        storage = FirebaseStorage.getInstance()
         auth = FirebaseAuth.getInstance()
         permissionUtils = PermissionUtils(this)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
@@ -295,12 +300,23 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (-1 == Activity.RESULT_OK && data != null) {
+
             val originalBitmap = data!!.extras!!.get("data") as Bitmap
-            val newWidth = 200
-            val newHeight = 300
-            val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-            binding.photo.setImageBitmap(scaledBitmap)
-            Toast.makeText(this, "Failed to Capture", Toast.LENGTH_SHORT)
+            binding.photo.setImageBitmap(originalBitmap)
+            binding.uploadImage.visibility = View.VISIBLE
+            binding.uploadImage.setOnClickListener {
+
+                val uri = getImageUri(this, originalBitmap)
+
+                storage.reference.child("images")
+                    .child(Date().time.toString())
+                    .putFile(uri)
+                    .addOnSuccessListener {
+                        Toast.makeText(this,"image uploaded",Toast.LENGTH_SHORT).show()
+                    }
+            }
+
+
         } else {
             Toast.makeText(this, "Failed to Capture", Toast.LENGTH_SHORT)
         }
@@ -312,5 +328,11 @@ class MainActivity : AppCompatActivity() {
         var battery = ""
         var charging = ""
         var imei = ""
+    }
+    fun getImageUri(inContext: Context, inImage: Bitmap): Uri {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path = MediaStore.Images.Media.insertImage(inContext.contentResolver, inImage, "Title", null)
+        return Uri.parse(path)
     }
 }

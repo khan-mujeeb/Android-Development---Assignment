@@ -237,7 +237,12 @@
         android:text="upload to firebase"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-
+<Button
+    android:visibility="invisible"
+    android:id="@+id/uploadImage"
+    android:text="upload image"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"/>
 
 
 </LinearLayout>
